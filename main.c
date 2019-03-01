@@ -17,11 +17,14 @@
 
 #define BOARD_TYPES 4
 
+void pong();
+
 unsigned char keyUp = 'A';
 unsigned char keyDown = 'Z';
 unsigned char boardType = 0;
 unsigned char sounds = 1;
 unsigned char waitFactor = 0;
+unsigned char color = 7;
 
 unsigned char xPlayer1, xPlayer2, yPlayer1, yPlayer2, xOldPlayer1, xOldPlayer2, yOldPlayer1, yOldPlayer2, i, scorePlayer1, scorePlayer2, xBall, yBall, realBallX, realBallY;
 char dbx, dby, bgBall = 32;
@@ -213,9 +216,9 @@ unsigned char playSoundPong[] = {238,2,0,0,0,0,0,62,16,0,0,208,7,0};
 unsigned char scoreFont[] = {63, 63, 63, 63, 63, 63, 63, 63};
 unsigned char scoreFont2[] = {0,30,30,30,30,30,30,0};
 unsigned char scoreFont3[] = {0,20,10,20,10,20,10,0};
-unsigned char scoreFont4[] = {0,5,0,5,0,0,0,0};
+unsigned char scoreFont4[] = {0,0,10,0,10,0,0,0};
 
-unsigned char netFont[] = {8, 8, 0, 0, 0, 0, 0, 0};
+unsigned char netFont[] = {8, 8, 8, 0, 0, 0, 0, 0};
 unsigned char ballFont[] = {0, 0, 30, 30, 30, 30, 0, 0};
 
 unsigned char ballTR[] = {15, 15, 15, 15, 0, 0, 0, 0};
@@ -322,6 +325,7 @@ void player()
 		wait(10);
 		key();
     }
+    if (key1 == 'C') changeColor();
     if (key1 == 'P') get();
     if (key1 == '!') engineRunning = 0;
 
@@ -350,6 +354,16 @@ void enemy()
         eraseStick(xOldPlayer2, yOldPlayer2);
         printStick(xPlayer2, yPlayer2);
     }
+}
+
+void changeColor()
+{
+	color++;
+	if (color==8) color = 1;
+	ink (color);
+	poke(0xbb80,color);
+	wait(10);
+	key();
 }
 
 void board()
@@ -432,6 +446,7 @@ void ball()
     if (realBallY < 1) {dby = -dby;		playSound(2);}
     if (realBallY > 26) {dby = -dby;	playSound(2);}
 
+	// print bg
     poke(0xbb80 + realBallX + (multi40[realBallY]), bgBall);
 
     xBall = xBall + dbx;
@@ -441,7 +456,12 @@ void ball()
     realBallY = yBall / BALL_DELIMITER;
 
     modBall();
-    printBall();
+	
+	// get bg
+	bgBall = peek(0xbb80 + realBallX + (multi40[realBallY]));
+	
+	// print ball
+    poke(0xbb80 + realBallX + (multi40[realBallY]), CHAR_BALL);
 
 }
 
@@ -481,11 +501,6 @@ void modBall()
     }
 }
 
-void printBall()
-{
-    bgBall = peek(0xbb80 + realBallX + (multi40[realBallY]));
-    poke(0xbb80 + realBallX + (multi40[realBallY]), CHAR_BALL);
-}
 
 void printStick(unsigned char x, unsigned char y)
 {
@@ -565,9 +580,9 @@ void playSound(unsigned char type)
 	if (!sounds) return;
 	
 	switch (type){
-		case 1: kbdclick1(); break;
+		case 1: kbdclick2(); break;
 		case 2: kbdclick2(); break;
-		case 3: ping(); break;
+		case 3: pong(); break;
 		
 	}
 }
@@ -593,14 +608,14 @@ void title()
     printf("    _      _   _  _  __  _   _        ");
     printf("    _      _____  _   _  _____        ");
     printf("                                      ");
-    printf("                                      ");
     printf("      Keys:         P - Pause         ");
     printf("                    T - Score type    ");
     printf("      A - Up        S - Sounds On/Off ");
     printf("      Z - Down      R - Restart       ");
+    printf("                    C - Color         ");
     printf("                    ! - Exit          ");
-    printf("                                      ");
-    printf("                    Press any key!    ");
+	printf("                                      ");
+    printf("                  \033L Press any key!    ");
     printf("                                      ");
 
 
